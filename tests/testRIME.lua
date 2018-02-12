@@ -58,9 +58,11 @@ function TestRime:xtestMaintance()
   cost(function()
     rime:deploy()
   end,'deploy')
+
   cost(function()
-    rime:deploy_schema('luna_pinyin')
+    rime:deploy_schema('luna_pinyin_fluency')
   end,'deploy_schema')
+
   cost(function()
     rime:deploy_config_file('default','1.2.1')
   end,'deploy_config_file')
@@ -91,7 +93,7 @@ function TestSession:testBasic()
   session:Schema(schema)
   assert(schema==session:Schema())
 
-  rime:deploy_schema('luna_pinyin')
+  rime:deploy_schema('luna_pinyin_fluency')
   --change schema
   local schema_list = rime:Schemas()
   rime.utils.print_r(schema_list)
@@ -131,10 +133,49 @@ function TestSession:testProcess()
       schema = 'luna_pinyin_fluency'
     end
   end
+  assert(schema)
   if schema then
     session:Schema(schema)
     assert(schema==session:Schema())
     rime.utils.print_r(rime:Schemas())
+
+
+    assert(session:simulate('xiguanjiuhaole')==true)
+    rime.utils.printInfo(session)
+    list = session:Candidates()
+    for i=1,10 do
+      print(list[i])
+    end
+    assert(session:Select(1))
+    print(session:Commit())
+
+    assert(session:simulate('burejinsiji')==true)
+    rime.utils.printInfo(session)
+    list = session:Candidates()
+    for i=1,10 do
+      print(list[i])
+    end
+    assert(session:Select(1))
+    print(session:Commit())
+
+    assert(session:simulate('shurufangshizhuanhuanjian')==true)
+    rime.utils.printInfo(session)
+    list = session:Candidates()
+    for i=1,10 do
+      print(list[i])
+    end
+    assert(session:Select(1))
+    print(session:Commit())
+
+    assert(session:simulate('chujiangkongwan')==true)
+    rime.utils.printInfo(session)
+    list = session:Candidates()
+    for i=1,10 do
+      print(list[i])
+    end
+    assert(session:Select(1))
+    print(session:Commit())
+
 
     local seq = 'yitiaodaheboliangkuanfengchuidaohuaxiangliaan'
     for i=1,#seq do
