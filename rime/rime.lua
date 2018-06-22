@@ -636,7 +636,7 @@ local mtIME = {
 
       if toBoolean(self.api.get_schema_list(schemas)) then
         local ret = {}
-        for i = 0, schemas[0].size-1 do
+        for i = 0, tonumber(schemas[0].size)-1 do
           ret[#ret+1] = {
             id=ffi.string(schemas[0].list[i].schema_id),
             name=ffi.string(schemas[0].list[i].name)}
@@ -720,6 +720,8 @@ local mtIME = {
     if ffi.os=='Windows' then
       path = string.sub(path,2,-1)
       path = string.gsub(path,"\\",'/')
+    elseif ffi.os=='OSX' then
+      path = string.sub(path, 2, -1)
     end
 
     --get folder of path
