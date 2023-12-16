@@ -28,6 +28,20 @@ typedef struct rime_traits_t {
 
   //! A list of modules to load before initializing
   const char** modules;
+  // v1.6
+  /*! Minimal level of logged messages.
+   *  Value is passed to Glog library using FLAGS_minloglevel variable.
+   *  0 = INFO (default), 1 = WARNING, 2 = ERROR, 3 = FATAL
+   */
+  int min_log_level;
+  /*! Directory of log files.
+   *  Value is passed to Glog library using FLAGS_log_dir variable.
+   */
+  const char* log_dir;
+  //! prebuilt data directory. defaults to ${shared_data_dir}/build
+  const char* prebuilt_data_dir;
+  //! staging directory. defaults to ${user_data_dir}/build
+  const char* staging_dir;
 } RimeTraits;
 
 typedef struct {
@@ -126,6 +140,11 @@ typedef void (*RimeNotificationHandler)(void* context_object,
                                         RimeSessionId session_id,
                                         const char* message_type,
                                         const char* message_value);
+
+typedef struct rime_string_slice_t {
+  const char* str;
+  size_t length;
+} RimeStringSlice;
 
 // Setup
 
@@ -464,6 +483,42 @@ typedef struct rime_api_t {
   Bool (*candidate_list_next)(RimeCandidateListIterator* iterator);
   void (*candidate_list_end)(RimeCandidateListIterator* iterator);
 
+  //! access config files in user data directory, eg. user.yaml and
+  //! installation.yaml
+  Bool (*user_config_open)(const char* config_id, RimeConfig* config);
+
+  Bool (*candidate_list_from_index)(RimeSessionId session_id,
+                                    RimeCandidateListIterator* iterator,
+                                    int index);
+
+  //! prebuilt data directory.
+  const char* (*get_prebuilt_data_dir)(void);
+  //! staging directory, stores data files deployed to a Rime client.
+  const char* (*get_staging_dir)(void);
+
+  //! Deprecated: for capnproto API, use "proto" module from librime-proto
+  //! plugin.
+  void (*commit_proto)(RimeSessionId session_id,
+                       void* commit_builder);
+  void (*context_proto)(RimeSessionId session_id,
+                        void* context_builder);
+  void (*status_proto)(RimeSessionId session_id,
+                       void* status_builder);
+
+  const char* (*get_state_label)(RimeSessionId session_id,
+                                 const char* option_name,
+                                 Bool state);
+
+  //! delete a candidate at the given index in candidate list.
+  Bool (*delete_candidate)(RimeSessionId session_id, size_t index);
+  //! delete a candidate from current page.
+  Bool (*delete_candidate_on_current_page)(RimeSessionId session_id,
+                                           size_t index);
+
+  RimeStringSlice (*get_state_label_abbreviated)(RimeSessionId session_id,
+                                                 const char* option_name,
+                                                 Bool state,
+                                                 Bool abbreviated);
 } RimeApi;
 
 //! API entry

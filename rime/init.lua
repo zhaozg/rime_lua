@@ -2,7 +2,6 @@ local ffi = require'ffi'
 ------------------------------------------------------------------------------
 --!help utilities
 local function IsNULL(val)  return val==nil end
-local function toBoolean(val)  return val~=ffi.C.False end
 local function IsFalse(val) return val==ffi.C.False end
 local function IsEmpty(s) return s==nil or ffi.string(s)=='' end
 
@@ -59,112 +58,112 @@ end
 local mtRimeConfig = {
   __index = {
     bool = function(self, key, val)
-      local api = host
+      assert(host)
       if type(val)=='nil' then
-        return toBoolean(api.config_set_bool(self,key,val and ffi.C.True or ffi.C.False))
+        return toBoolean(host.config_set_bool(self,key,val and ffi.C.True or ffi.C.False))
       else
         local value = ffi.new('Bool[1]',0)
-        local ret = toBoolean(api.config_get_bool(self, key, value))
+        local ret = toBoolean(host.config_get_bool(self, key, value))
         if ret then return toBoolean(value[0]) end
       end
     end,
     int = function(self, key, val)
-      local api = host
+      assert(host)
       if val then
-        return toBoolean(api.config_set_int(self, key, tonumber(val)))
+        return toBoolean(host.config_set_int(self, key, tonumber(val)))
       else
         local value = ffi.new('int[1]',0)
-        local ret = toBoolean(api.config_get_int(config, key, value))
+        local ret = toBoolean(host.config_get_int(self, key, value))
         if ret then return tonumber(value[0]) end
       end
     end,
     double = function(self, key, val)
-      local api = host
+      assert(host)
       if val then
-        return toBoolean(api.config_set_double(self, key, tonumber(val)))
+        return toBoolean(host.config_set_double(self, key, tonumber(val)))
       else
         local value = ffi.new('double[1]',0)
-        local ret = toBoolean(api.config_get_double(config, key, value))
+        local ret = toBoolean(host.config_get_double(self, key, value))
         if ret then return tonumber(value[0]) end
       end
     end,
     string = function(self, key, val)
-      local api = host
+      assert(host)
       if val then
-        return toBoolean(api.config_set_string(self, key, val))
+        return toBoolean(host.config_set_string(self, key, val))
       else
         local value = ffi.new('char[1024]',0)
-        local ret = toBoolean(api.config_get_string(config, key, value, ffi.sizeof(value)-1))
+        local ret = toBoolean(host.config_get_string(self, key, value, ffi.sizeof(value)-1))
         if ret then return toString(value) end
       end
     end,
     item = function(self, key, val)
-      local api = host
+      assert(host)
       if val then
-        return toBoolean(api.config_set_item(self, key, val))
+        return toBoolean(host.config_set_item(self, key, val))
       else
         local value = StructCreate('RimeConfig[1]',gc_config)
-        local ret = toBoolean(api.config_get_item(self, key, value))
+        local ret = toBoolean(host.config_get_item(self, key, value))
         if ret then
           return value
         end
       end
     end,
     updateSignature = function(self, signer)
-      local api = host
-      return toBoolean(api.config_update_signature(self, signer))
+      assert(host)
+      return toBoolean(host.config_update_signature(self, signer))
     end,
     close = function(self)
-      local api = host
-      return toBoolean(api.config_close(self))
+      assert(host)
+      return toBoolean(host.config_close(self))
     end,
     clear = function(self, key)
-      local api = host
-      return toBoolean(api.config_clear(self, key))
+      assert(host)
+      return toBoolean(host.config_clear(self, key))
     end,
     size = function(self, key)
-      local api = host
-      return tonumber(api.config_list_size(self,key))
+      assert(host)
+      return tonumber(host.config_list_size(self,key))
     end,
     create_list = function(self, key)
-      local api = host
-      return toBoolean(api.config_create_list(self,key))
+      assert(host)
+      return toBoolean(host.config_create_list(self,key))
     end,
     create_map = function(self, key)
-      local api = host
-      return toBoolean(api.config_create_map(self,key))
+      assert(host)
+      return toBoolean(host.config_create_map(self,key))
     end,
     iterator = function(self, key)
-      local api = host
+      assert(host)
       local iter = StructCreate('RimeConfigIterator[1]', function(iter)
-        api.config_end(iter)
+        host.config_end(iter)
       end)
 
-      local size = tonumber(api.config_list_size(self, key))
+      local size = tonumber(host.config_list_size(self, key))
       local ret = nil
       if size==0 then
-        ret = toBoolean(api.config_begin_map(iter, self, key))
+        ret = toBoolean(host.config_begin_map(iter, self, key))
       else
-        ret = toBoolean(api.config_begin_list(iter, self, key))
+        ret = toBoolean(host.config_begin_list(iter, self, key))
       end
 
       if ret then
-        iter = {iterator = iter}
-        local function next(self, iter)
-          local b = toBoolean(api.config_next(iter.iterator))
+        local iterator = {iterator = iter}
+        local function next(_, _iter)
+          local b = toBoolean(host.config_next(_iter.iterator))
           if b then
-            iter.path = ffi.string(iter.iterator[0].path)
+            _iter.path = ffi.string(_iter.iterator[0].path)
             if size==0 then
-              iter.key = ffi.string(iter.iterator[0].key)
+              _iter.key = ffi.string(_iter.iterator[0].key)
             else
-              iter.index = tonumber(iter.iterator[0].index)
+              _iter.index = tonumber(_iter.iterator[0].index)
             end
-            return iter
+            return _iter
           else
-            iter = nil
+            _iter = nil
           end
         end
-        return next, self, iter
+        return next, self, iterator
       end
     end
   }
@@ -236,7 +235,7 @@ local mtSession = {
       return toBoolean(self.api.commit_composition(self.id))
     end,
     clear = function(self)
-      api.clear_composition(self.id)
+      self.host.clear_composition(self.id)
     end,
 
     --output
@@ -319,7 +318,7 @@ local mtSession = {
         return nil
       else
         assert(type(value)=='string')
-        api.set_property(session_id, prop, value)
+        self.api.set_property(self.id, prop, value)
       end
     end,
 
@@ -351,7 +350,7 @@ local mtSession = {
         return tonumber(self.api.get_caret_pos(self.id))+1
       else
         assert(pos>0)
-        api.set_caret_pos(self.id, pos -1);
+        self.api.set_caret_pos(self.id, pos -1);
       end
     end,
 
@@ -372,8 +371,9 @@ local mtSession = {
         self.api.candidate_list_end(iter)
       end)
 
-      if toBoolean(self.api.candidate_list_begin(self.id, iterator)) then
-        local lists = {}
+      local lists = {}
+      local b = self.api.candidate_list_begin(self.id, iterator)
+      if toBoolean(b) then
         repeat
           local more = toBoolean(self.api.candidate_list_next(iterator))
           if more then
@@ -383,8 +383,8 @@ local mtSession = {
             }
           end
         until not more
-        return lists
       end
+      return lists
     end,
   },
   __gc = function(self)
@@ -403,6 +403,7 @@ local mtSession = {
 
 -- initialize ----------------------------------------------------------------
 local function toTraits(self, datadir, userdir, distname, appname, appver)
+  _ = self
   datadir = datadir or 'data'
   userdir = userdir or 'data'
   distname = distname or 'LRime'
@@ -416,6 +417,7 @@ local function toTraits(self, datadir, userdir, distname, appname, appver)
   traits[0].distribution_code_name = appname
   traits[0].distribution_version   = appver
   traits[0].app_name               = appname..' '..appver
+  traits[0].min_log_level          = 3
 
   return traits
 end
@@ -446,24 +448,24 @@ function utils.print_r(root)
     print(root)
     return
   end
-	local cache = {  [root] = "." }
-	local function _dump(t,space,name)
-		local temp = {}
-		for k,v in pairs(t) do
-			local key = tostring(k)
-			if cache[v] then
-				tinsert(temp,"+" .. key .. " {" .. cache[v].."}")
-			elseif type(v) == "table" then
-				local new_key = name .. "." .. key
-				cache[v] = new_key
-				tinsert(temp,"+" .. key .. _dump(v,space .. (next(t,k) and "|" or " " ).. srep(" ",#key),new_key))
-			else
-				tinsert(temp,"+" .. key .. " [" .. tostring(v).."]")
-			end
-		end
-		return tconcat(temp,"\n"..space)
-	end
-	print(_dump(root, "",""))
+  local cache = {  [root] = "." }
+  local function _dump(t,space,name)
+    local temp = {}
+    for k,v in pairs(t) do
+      local key = tostring(k)
+      if cache[v] then
+        tinsert(temp,"+" .. key .. " {" .. cache[v].."}")
+      elseif type(v) == "table" then
+        local new_key = name .. "." .. key
+        cache[v] = new_key
+        tinsert(temp,"+" .. key .. _dump(v,space .. (next(t,k) and "|" or " " ).. srep(" ",#key),new_key))
+      else
+        tinsert(temp,"+" .. key .. " [" .. tostring(v).."]")
+      end
+    end
+    return tconcat(temp,"\n"..space)
+  end
+  print(_dump(root, "",""))
 end
 
 function utils.printStatus(status)
@@ -504,7 +506,7 @@ function utils.printComposition(composition)
   end
 end
 
-function utils.printMenu(menu)
+function utils.printMenu(menu, composition)
   if not menu then return end
   if (menu.num_candidates == 0) then return end
 
@@ -541,7 +543,7 @@ end
 
 function utils.printInfo(session, commit)
   if not session then return end
-  local commit = commit and session:Commit()
+  commit = commit and session:Commit()
   if commit then
     printf("commit: %s\n", commit)
     print()
@@ -569,6 +571,7 @@ local mtIME = {
     toTraits = toTraits,
     --
     initialize = function(self, traits, fullcheck, on_message)
+      assert(self.initlized == nil)
       local api = self.api
       fullcheck = fullcheck or ffi.C.False
       assert(traits)
@@ -576,6 +579,7 @@ local mtIME = {
       api.setup(traits)
 
       on_message = on_message or function(context_object,session_id,message_type,message_value)
+        _ = context_object
         local msg = string.format("message: [%d] [%s] %s\n",
           tonumber(session_id),
           toString(message_type),
@@ -588,12 +592,14 @@ local mtIME = {
       if (self.api.start_maintenance(fullcheck)) then
         api.join_maintenance_thread();
       end
-      return true
+      self.initlized = true
+      return self.initlized
     end,
 
     finalize = function (self)
       assert(self.initlized)
-      api.finalize()
+      self.api.finalize()
+      self.initlized = nil
     end,
 
     start_maintenance = function (self, full_check)
@@ -725,12 +731,12 @@ local mtIME = {
     end
 
     --get folder of path
-    local s, e = nil,0
+    local off, e = 1, nil
     repeat
-      s = e
-      e = string.find(path,'/', s+1)
-    until e==nil
-    path = s and path:sub(1,s) or './'
+      e = string.find(path, '/', off + 1, true)
+      if e then off = e end
+    until e == nil
+    path = path:sub(1, off) or './'
 
     local f = assert(io.open(path..'rime.h'))
     local ctx = f:read('*a')

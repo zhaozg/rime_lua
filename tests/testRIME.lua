@@ -1,3 +1,4 @@
+package.path = '?/init.lua;?.lua;'..package.path
 local luaunit = require('luaunit')
 local profile = require('profile')
 
@@ -60,11 +61,11 @@ function TestRime:xtestMaintance()
   end,'deploy')
 
   cost(function()
-    rime:deploy_schema('luna_pinyin_fluency')
+    rime:deploy_schema('luna_pinyin')
   end,'deploy_schema')
 
   cost(function()
-    rime:deploy_config_file('default','1.2.1')
+    rime:deploy_config_file('default','1.3.1')
   end,'deploy_config_file')
   cost(function()
     rime:sync_user_data()
@@ -83,6 +84,12 @@ TestSession = {}
 
 function TestSession:setup()
   self.session = rime:SessionCreate()
+  local schema = self.session:Schema()
+  print('current:',schema)
+  if schema ~= 'luna_pinyin' then
+    schema = 'luna_pinyin'
+    self.session:Schema(schema)
+  end
 end
 
 function TestSession:testBasic()
@@ -93,7 +100,7 @@ function TestSession:testBasic()
   session:Schema(schema)
   assert(schema==session:Schema())
 
-  rime:deploy_schema('luna_pinyin_fluency')
+  rime:deploy_schema('luna_pinyin')
   --change schema
   local schema_list = rime:Schemas()
   rime.utils.print_r(schema_list)
@@ -101,7 +108,6 @@ function TestSession:testBasic()
   local schemaid = schema_list[#schema_list].id
   session:Schema(schema)
   assert(schema==session:Schema())
-
 
   local v = session:Option('ascii_mode')
   session:Option('ascii_mode', not v)
@@ -117,7 +123,7 @@ function TestSession:testBasic()
   rime.utils.printInfo(session)
   list = session:Candidates()
   assert(type(list)=='table')
-  --rime.utils.print_r(list,'list of abcd')
+  rime.utils.print_r(list,'list of abcd')
   assert(session:Select(1))
   print(session:Commit())
   rime.utils.printInfo(session)
@@ -125,54 +131,34 @@ end
 
 function TestSession:testProcess()
   local session = self.session
-  local schema_list = rime:Schemas()
+  --disable ascii_mode
+  if session:Schema('luna_pinyin') then
+    session:Option('ascii_mode', false)
+    local list
 
-  local schema
-  for k,v in pairs(schema_list) do
-    if v.id=='luna_pinyin_fluency' then
-      schema = 'luna_pinyin_fluency'
-    end
-  end
-  assert(schema)
-  if schema then
-    session:Schema(schema)
-    assert(schema==session:Schema())
-    rime.utils.print_r(rime:Schemas())
-
-
-    assert(session:simulate('xiguanjiuhaole')==true)
     rime.utils.printInfo(session)
+    assert(session:simulate('xiguanjiuhaole')==true)
     list = session:Candidates()
-    for i=1,10 do
-      print(list[i])
-    end
+    rime.utils.print_r(list, "习惯就好了")
     assert(session:Select(1))
     print(session:Commit())
 
     assert(session:simulate('burejinsiji')==true)
     rime.utils.printInfo(session)
     list = session:Candidates()
-    for i=1,10 do
-      print(list[i])
-    end
+    rime.utils.print_r(list, "布热津斯基")
     assert(session:Select(1))
     print(session:Commit())
 
     assert(session:simulate('shurufangshizhuanhuanjian')==true)
     rime.utils.printInfo(session)
     list = session:Candidates()
-    for i=1,10 do
-      print(list[i])
-    end
     assert(session:Select(1))
     print(session:Commit())
 
     assert(session:simulate('chujiangkongwan')==true)
     rime.utils.printInfo(session)
     list = session:Candidates()
-    for i=1,10 do
-      print(list[i])
-    end
     assert(session:Select(1))
     print(session:Commit())
 
@@ -186,7 +172,7 @@ function TestSession:testProcess()
     assert(session:Select(1))
     print(session:Commit())
   else
-    print('skip test luna_pinyin_fluency')
+    print('skip test luna_pinyin')
   end
 end
 
@@ -210,6 +196,8 @@ function TestConfig:testDefaultList()
   local config = rime:ConfigOpen('default')
   assert(config[0]:size('schema_list')>0)
   local list = config[0]:item('schema_list')
+  assert(list)
+  rime.utils.print_r(list)
   print(config[0]:iterator('schema_list'))
   for v in config[0]:iterator('schema_list') do
     rime.utils.print_r(v)
@@ -220,6 +208,8 @@ function TestConfig:testDefaultMap()
   local config = rime:ConfigOpen('default')
   assert(config[0]:size('switcher')==0)
   local list = config[0]:item('switcher')
+  assert(list)
+  rime.utils.print_r(list)
   print(config[0]:iterator('switcher'))
   for v in config[0]:iterator('switcher') do
     rime.utils.print_r(v)
