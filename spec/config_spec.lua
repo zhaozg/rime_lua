@@ -23,7 +23,6 @@ describe("config test", function()
   teardown(function()
     _ref = _ref - 1
     if _ref == 0 then
-      print('yyy', _ref)
       rime:finalize()
       rime = nil
     end

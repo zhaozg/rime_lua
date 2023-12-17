@@ -6,14 +6,22 @@ local ffi = require'ffi'
 if (ffi.os == 'OSX') then
   traits = {
     runtimePath = 'lib/librime.1.dylib',
-    dataPath = os.getenv('HOME') ..
-      '/Library/Input Methods/Squirrel.app/Contents/SharedSupport',
+    dataPath = 'var',
     userPath = 'var/rime',
     name= "rime-lua",
     code_name = 'rime-lua',
     version = '0.0.0'
   }
-else
+elseif ffi.os == 'Linux' then
+  traits = {
+    runtimePath = 'lib/librime.1.so',
+    dataPath = 'var',
+    userPath = 'var/rime',
+    name= "rime-lua",
+    code_name = 'rime-lua',
+    version = '0.0.0'
+  }
+elseif ffi.os == 'Windows' then
   traits = {
     runtimePath = [[e:\Totalcmd\Tools\RIME\weasel-0.9.30\rime.dll]],
     dataPath = [[e:\Totalcmd\Tools\RIME\weasel-0.9.30\data]],
