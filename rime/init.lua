@@ -1,26 +1,26 @@
-local ffi = require'ffi'
+local ffi = require 'ffi'
 ------------------------------------------------------------------------------
 --!help utilities
-local function IsNULL(val)  return val==nil end
-local function IsFalse(val) return val==ffi.C.False end
-local function IsEmpty(s) return s==nil or ffi.string(s)=='' end
+local function IsNULL(val) return val == nil end
+local function IsFalse(val) return val == ffi.C.False end
+local function IsEmpty(s) return s == nil or ffi.string(s) == '' end
 
 local function toBoolean(val)
-  assert(val==ffi.C.True or val==ffi.C.False)
-  return val~=ffi.C.False
+  assert(val == ffi.C.True or val == ffi.C.False)
+  return val ~= ffi.C.False
 end
 
 local function toBool(val)
-  assert(type(val)=='boolean')
+  assert(type(val) == 'boolean')
   return val and ffi.C.True or ffi.C.False
 end
 
 local function toString(v, len)
-  if type(v)=='cdata' then
-    if(v==nil) then
+  if type(v) == 'cdata' then
+    if (v == nil) then
       return nil
     else
-      return ffi.string(v,len)
+      return ffi.string(v, len)
     end
   else
     return tostring(v)
@@ -28,7 +28,7 @@ local function toString(v, len)
 end
 
 local function toPointer(s)
-  return ffi.cast('intptr_t',ffi.cast('void*',s))
+  return ffi.cast('intptr_t', ffi.cast('void*', s))
 end
 
 local function StructCreate(ctype, gc)
@@ -42,118 +42,104 @@ end
 
 local function StructCreateInit(ctype, gc)
   local ret = StructCreate(ctype, gc)
-  ret[0].data_size = ffi.sizeof(ctype)-ffi.sizeof('int')
+  ret[0].data_size = ffi.sizeof(ctype) - ffi.sizeof('int')
   return ret
 end
 
 ------------------------------------------------------------------------------
 -- configuration -------------------------------------------------------------
 
-local host = nil
-local function gc_config(self)
-  assert(host)
-  host.config_close(self)
-end
-
-local mtRimeConfig = {
+local mtRimeConfig
+mtRimeConfig = {
   __index = {
     bool = function(self, key, val)
-      assert(host)
-      if type(val)=='nil' then
-        return toBoolean(host.config_set_bool(self,key,val and ffi.C.True or ffi.C.False))
+      if type(val) == 'nil' then
+        return toBoolean(self.api.config_set_bool(self.config, key, val and ffi.C.True or ffi.C.False))
       else
-        local value = ffi.new('Bool[1]',0)
-        local ret = toBoolean(host.config_get_bool(self, key, value))
+        local value = ffi.new('Bool[1]', 0)
+        local ret = toBoolean(self.api.config_get_bool(self.config, key, value))
         if ret then return toBoolean(value[0]) end
       end
     end,
     int = function(self, key, val)
-      assert(host)
       if val then
-        return toBoolean(host.config_set_int(self, key, tonumber(val)))
+        return toBoolean(self.api.config_set_int(self.config, key, tonumber(val)))
       else
-        local value = ffi.new('int[1]',0)
-        local ret = toBoolean(host.config_get_int(self, key, value))
+        local value = ffi.new('int[1]', 0)
+        local ret = toBoolean(self.api.config_get_int(self.config, key, value))
         if ret then return tonumber(value[0]) end
       end
     end,
     double = function(self, key, val)
-      assert(host)
       if val then
-        return toBoolean(host.config_set_double(self, key, tonumber(val)))
+        return toBoolean(self.api.config_set_double(self.config, key, tonumber(val)))
       else
-        local value = ffi.new('double[1]',0)
-        local ret = toBoolean(host.config_get_double(self, key, value))
+        local value = ffi.new('double[1]', 0)
+        local ret = toBoolean(self.api.config_get_double(self.config, key, value))
         if ret then return tonumber(value[0]) end
       end
     end,
     string = function(self, key, val)
-      assert(host)
       if val then
-        return toBoolean(host.config_set_string(self, key, val))
+        return toBoolean(self.api.config_set_string(self.config, key, val))
       else
-        local value = ffi.new('char[1024]',0)
-        local ret = toBoolean(host.config_get_string(self, key, value, ffi.sizeof(value)-1))
+        local value = ffi.new('char[1024]', 0)
+        local ret = toBoolean(self.api.config_get_string(self.config, key, value, ffi.sizeof(value) - 1))
         if ret then return toString(value) end
       end
     end,
     item = function(self, key, val)
-      assert(host)
       if val then
-        return toBoolean(host.config_set_item(self, key, val))
+        return toBoolean(self.api.config_set_item(self.config, key, val))
       else
-        local value = StructCreate('RimeConfig[1]',gc_config)
-        local ret = toBoolean(host.config_get_item(self, key, value))
+        local value = StructCreate('RimeConfig[1]', gc_config)
+        local ret = toBoolean(self.api.config_get_item(self.config, key, value))
         if ret then
-          return value
+          return setmetatable({
+            config = value,
+            api = self.api,
+          }, mtRimeConfig)
         end
       end
     end,
     updateSignature = function(self, signer)
-      assert(host)
-      return toBoolean(host.config_update_signature(self, signer))
+      return toBoolean(self.api.config_update_signature(self.config, signer))
     end,
     close = function(self)
-      assert(host)
-      return toBoolean(host.config_close(self))
+      return toBoolean(self.api.config_close(self.config))
     end,
     clear = function(self, key)
-      assert(host)
-      return toBoolean(host.config_clear(self, key))
+      return toBoolean(self.api.config_clear(self.config, key))
     end,
     size = function(self, key)
-      assert(host)
-      return tonumber(host.config_list_size(self,key))
+      return tonumber(self.api.config_list_size(self.config, key))
     end,
     create_list = function(self, key)
-      assert(host)
-      return toBoolean(host.config_create_list(self,key))
+      return toBoolean(self.api.config_create_list(self.config, key))
     end,
     create_map = function(self, key)
-      assert(host)
-      return toBoolean(host.config_create_map(self,key))
+      return toBoolean(self.api.config_create_map(self.config, key))
     end,
     iterator = function(self, key)
-      assert(host)
       local iter = StructCreate('RimeConfigIterator[1]', function(iter)
-        host.config_end(iter)
+        self.api.config_end(iter)
       end)
 
-      local size = tonumber(host.config_list_size(self, key))
+      local size = tonumber(self.api.config_list_size(self.config, key))
       local ret = nil
-      if size==0 then
-        ret = toBoolean(host.config_begin_map(iter, self, key))
+      if size == 0 then
+        ret = toBoolean(self.api.config_begin_map(iter, self.config, key))
       else
-        ret = toBoolean(host.config_begin_list(iter, self, key))
+        ret = toBoolean(self.api.config_begin_list(iter, self.config, key))
       end
 
       if ret then
-        local iterator = {iterator = iter}
+        local iterator = { iterator = iter }
         local function next(_, _iter)
-          local b = toBoolean(host.config_next(_iter.iterator))
+          local b = toBoolean(self.api.config_next(_iter.iterator))
           if b then
             _iter.path = ffi.string(_iter.iterator[0].path)
-            if size==0 then
+            if size == 0 then
               _iter.key = ffi.string(_iter.iterator[0].key)
             else
               _iter.index = tonumber(_iter.iterator[0].index)
@@ -166,7 +152,10 @@ local mtRimeConfig = {
         return next, self, iterator
       end
     end
-  }
+  },
+  __gc = function(self)
+    self.api.config_close(self.config)
+  end
 }
 
 -- session -------------------------------------------------------------------
@@ -180,7 +169,7 @@ local function Menu(menu)
 
   ret.num_candidates = menu.num_candidates
   local candidates = {}
-  for i=0, ret.num_candidates-1 do
+  for i = 0, ret.num_candidates - 1 do
     table.insert(candidates, {
       text = toString(menu.candidates[i].text),
       comment = toString(menu.candidates[i].comment)
@@ -189,10 +178,11 @@ local function Menu(menu)
   ret.candidates = candidates
 
   if not IsNULL(menu.select_keys) then
-    ret.select_keys =  ffi.string(menu.select_keys)
+    ret.select_keys = ffi.string(menu.select_keys)
   end
   return ret
 end
+
 -- composition help
 local function Composition(composition)
   local ret = {}
@@ -200,7 +190,7 @@ local function Composition(composition)
   ret.cursor = composition.cursor_pos + 1
   ret.sel_start = composition.sel_start + 1
   ret.sel_end = composition.sel_end
-  ret.preedit = composition.length > 0 and ffi.string(composition.preedit,ret.length) or nil
+  ret.preedit = composition.length > 0 and ffi.string(composition.preedit, ret.length) or nil
   return ret
 end
 
@@ -226,7 +216,7 @@ local mtSession = {
       return toBoolean(self.api.simulate_key_sequence(self.id, key_sequence))
     end,
     --input
-    process = function(self,keycode, mask)
+    process = function(self, keycode, mask)
       mask = mask or 0
       return toBoolean(self.api.process_key(self.id, keycode, mask))
     end,
@@ -240,7 +230,7 @@ local mtSession = {
 
     --output
     Commit = function(self)
-      local commit  = StructCreateInit('RimeCommit[1]')
+      local commit = StructCreateInit('RimeCommit[1]')
       if toBoolean(self.api.get_commit(self.id, commit)) then
         return ffi.string(commit[0].text)
       end
@@ -248,15 +238,15 @@ local mtSession = {
 
     Status = function(self)
       local function totable(status)
-        local ret = {}
-        ret.id = ffi.string(status.schema_id)
-        ret.name  = ffi.string(status.schema_name)
+        local ret      = {}
+        ret.id         = ffi.string(status.schema_id)
+        ret.name       = ffi.string(status.schema_name)
 
-        ret.disabled    = toBoolean(status.is_disabled)
-        ret.composing   = toBoolean(status.is_composing)
-        ret.ascii_mode  = toBoolean(status.is_ascii_mode)
-        ret.full_shape  = toBoolean(status.is_full_shape)
-        ret.simplified  = toBoolean(status.is_simplified)
+        ret.disabled   = toBoolean(status.is_disabled)
+        ret.composing  = toBoolean(status.is_composing)
+        ret.ascii_mode = toBoolean(status.is_ascii_mode)
+        ret.full_shape = toBoolean(status.is_full_shape)
+        ret.simplified = toBoolean(status.is_simplified)
 
         return ret
       end
@@ -284,14 +274,14 @@ local mtSession = {
           repeat
             local l = context[0].select_labels[i]
             if not IsNULL(l) then
-              lables[#lables+1] = ffi.string(l)
+              lables[#lables + 1] = ffi.string(l)
             end
           until IsNULL(l)
           ret.select_labels = lables
         end
 
         if not IsNULL(context[0].commit_text_preview) then
-          ret.commit_text_preview =  ffi.string(context[0].commit_text_preview)
+          ret.commit_text_preview = ffi.string(context[0].commit_text_preview)
         end
 
         self.api.free_context(context)
@@ -301,31 +291,31 @@ local mtSession = {
     ------------------------------------------------------------------------------
     --runtime
     Option = function(self, option, value)
-      if value==nil then
+      if value == nil then
         return toBoolean(self.api.get_option(self.id, option))
       else
         self.api.set_option(self.id, option, toBool(value))
       end
     end,
 
-    Property = function (self, prop, value)
-      if value==nil then
-        local val = ffi.new('char[1024]',0)
-        local ret = toBoolean(self.api.get_property(self.id, prop, val, ffi.sizeof(val)-1))
+    Property = function(self, prop, value)
+      if value == nil then
+        local val = ffi.new('char[1024]', 0)
+        local ret = toBoolean(self.api.get_property(self.id, prop, val, ffi.sizeof(val) - 1))
         if ret then
           return toString(val)
         end
         return nil
       else
-        assert(type(value)=='string')
+        assert(type(value) == 'string')
         self.api.set_property(self.id, prop, value)
       end
     end,
 
     Schema = function(self, schema_id)
-      if schema_id==nil then
-        local current = ffi.new('char[256]',0)
-        if toBoolean(self.api.get_current_schema(self.id, current, ffi.sizeof(current)-1)) then
+      if schema_id == nil then
+        local current = ffi.new('char[256]', 0)
+        if toBoolean(self.api.get_current_schema(self.id, current, ffi.sizeof(current) - 1)) then
           return ffi.string(current);
         end
       else
@@ -339,25 +329,25 @@ local mtSession = {
       *  NULL is returned if session does not exist.
       *  the returned pointer to input string will become invalid upon editing.
     --]]
-    Input = function (self)
+    Input = function(self)
       return toString(self.api.get_input(self.id))
     end,
 
     --! if pos==nil, get caret posistion in terms of raw input
     --! or set caret posistion in terms of raw input
-    CaretPos = function (self, pos)
-      if pos==nil then
-        return tonumber(self.api.get_caret_pos(self.id))+1
+    CaretPos = function(self, pos)
+      if pos == nil then
+        return tonumber(self.api.get_caret_pos(self.id)) + 1
       else
-        assert(pos>0)
-        self.api.set_caret_pos(self.id, pos -1);
+        assert(pos > 0)
+        self.api.set_caret_pos(self.id, pos - 1);
       end
     end,
 
     --! if full is true, select a candidate at the given index in candidate list.
     --! or select a candidate from current page.
     Select = function(self, index, full)
-      assert(index>0)
+      assert(index > 0)
       if full then
         return toBoolean(self.api.select_candidate(self.id, index - 1))
       else
@@ -367,7 +357,7 @@ local mtSession = {
 
     --! access candidate list.
     Candidates = function(self)
-      local iterator = StructCreate('RimeCandidateListIterator[1]',function(iter)
+      local iterator = StructCreate('RimeCandidateListIterator[1]', function(iter)
         self.api.candidate_list_end(iter)
       end)
 
@@ -403,20 +393,20 @@ local mtSession = {
 
 -- initialize ----------------------------------------------------------------
 local function toTraits(self, datadir, userdir, distname, appname, appver)
-  _ = self
-  datadir = datadir or 'data'
-  userdir = userdir or 'data'
-  distname = distname or 'LRime'
-  appname = appname or 'LuaRime'
-  appver = appver or '0.01'
+  _                                = self
+  datadir                          = datadir or 'data'
+  userdir                          = userdir or 'data'
+  distname                         = distname or 'LRime'
+  appname                          = appname or 'LuaRime'
+  appver                           = appver or '0.01'
 
-  local traits = StructCreateInit('RimeTraits[1]')
+  local traits                     = StructCreateInit('RimeTraits[1]')
   traits[0].shared_data_dir        = datadir
   traits[0].user_data_dir          = userdir
   traits[0].distribution_name      = distname
   traits[0].distribution_code_name = appname
   traits[0].distribution_version   = appver
-  traits[0].app_name               = appname..' '..appver
+  traits[0].app_name               = appname .. ' ' .. appver
   traits[0].min_log_level          = 3
 
   return traits
@@ -425,7 +415,7 @@ end
 local function printf(...)
   io.write(string.format(...))
 end
-local function fprintf(file,...)
+local function fprintf(file, ...)
   file:write(string.format(...));
 end
 local function putchar(...)
@@ -444,40 +434,40 @@ local tostring = tostring
 local next = next
 
 function utils.print_r(root)
-  if type(root)~='table' then
+  if type(root) ~= 'table' then
     print(root)
     return
   end
-  local cache = {  [root] = "." }
-  local function _dump(t,space,name)
+  local cache = { [root] = "." }
+  local function _dump(t, space, name)
     local temp = {}
-    for k,v in pairs(t) do
+    for k, v in pairs(t) do
       local key = tostring(k)
       if cache[v] then
-        tinsert(temp,"+" .. key .. " {" .. cache[v].."}")
+        tinsert(temp, "+" .. key .. " {" .. cache[v] .. "}")
       elseif type(v) == "table" then
         local new_key = name .. "." .. key
         cache[v] = new_key
-        tinsert(temp,"+" .. key .. _dump(v,space .. (next(t,k) and "|" or " " ).. srep(" ",#key),new_key))
+        tinsert(temp, "+" .. key .. _dump(v, space .. (next(t, k) and "|" or " ") .. srep(" ", #key), new_key))
       else
-        tinsert(temp,"+" .. key .. " [" .. tostring(v).."]")
+        tinsert(temp, "+" .. key .. " [" .. tostring(v) .. "]")
       end
     end
-    return tconcat(temp,"\n"..space)
+    return tconcat(temp, "\n" .. space)
   end
-  print(_dump(root, "",""))
+  print(_dump(root, "", ""))
 end
 
 function utils.printStatus(status)
   if not status then return end
 
-  print(string.format("schema: %s / %s",status.id, status.name))
+  print(string.format("schema: %s / %s", status.id, status.name))
   print("status: ");
-  print('   disabled:',status.disabled)
-  print('  composing:',status.composing)
-  print('  asciimode:',status.ascii_mode)
-  print(' full_shape:',status.full_shape)
-  print(' simplified:',status.simplified)
+  print('   disabled:', status.disabled)
+  print('  composing:', status.composing)
+  print('  asciimode:', status.ascii_mode)
+  print(' full_shape:', status.full_shape)
+  print(' simplified:', status.simplified)
   print("");
 end
 
@@ -491,15 +481,15 @@ function utils.printComposition(composition)
   local endf = composition.sel_end;
   local cursor = composition.cursor;
   local len = #preedit
-  if start<endf then
-    printf(preedit:sub(1,start-1))
+  if start < endf then
+    printf(preedit:sub(1, start - 1))
     printf('[')
-    printf(preedit:sub(start,endf))
+    printf(preedit:sub(start, endf))
     printf(']')
-    printf(preedit:sub(endf+1,len))
+    printf(preedit:sub(endf + 1, len))
     print();
     printf(' ')
-    printf(string.rep('-',cursor-1))
+    printf(string.rep('-', cursor - 1))
     printf('^')
     printf(' ')
     print()
@@ -521,7 +511,7 @@ function utils.printMenu(menu, composition)
       highlighted and '[' or ' ',
       menu.candidates[i].text,
       highlighted and ']' or ' ',
-      menu.candidates[i].comment and  composition.candidates[i].comment or ""
+      menu.candidates[i].comment and composition.candidates[i].comment or ""
     )
   end
 end
@@ -539,7 +529,6 @@ function utils.printContext(context)
     print("(not composing)");
   end
 end
-
 
 function utils.printInfo(session, commit)
   if not session then return end
@@ -564,70 +553,78 @@ function utils.printInfo(session, commit)
   end
 end
 
---IME metatable
+-- IME
+-- IME libs
+local rime
+local initialized
+
+-- IME metatable
 local mtIME = {
   __index = {
-    --help
+    -- help
     toTraits = toTraits,
-    --
+    -- initialize
     initialize = function(self, traits, fullcheck, on_message)
       assert(self.initlized == nil)
       local api = self.api
       fullcheck = fullcheck or ffi.C.False
       assert(traits)
 
-      api.setup(traits)
+      if not initialized then
+        api.setup(traits)
 
-      on_message = on_message or function(context_object,session_id,message_type,message_value)
-        _ = context_object
-        local msg = string.format("message: [%d] [%s] %s\n",
-          tonumber(session_id),
-          toString(message_type),
-          toString(message_value))
-        print(msg)
-      end
-      api.set_notification_handler(on_message, nil);
+        on_message = on_message or function(context_object, session_id, message_type, message_value)
+          _ = context_object
+          local msg = string.format("message: [%d] [%s] %s\n",
+            tonumber(session_id),
+            toString(message_type),
+            toString(message_value))
+          print(msg)
+        end
+        api.set_notification_handler(on_message, nil);
 
-      api.initialize(nil);
-      if (self.api.start_maintenance(fullcheck)) then
-        api.join_maintenance_thread();
+        api.initialize(traits);
+        if (self.api.start_maintenance(fullcheck)) then
+          api.join_maintenance_thread();
+        end
+        initialized = true
       end
       self.initlized = true
       return self.initlized
     end,
 
-    finalize = function (self)
+    finalize = function(self)
       assert(self.initlized)
       self.api.finalize()
       self.initlized = nil
     end,
 
-    start_maintenance = function (self, full_check)
+    start_maintenance = function(self, full_check)
       return toBoolean(self.api.start_maintenance(toBool(full_check)))
     end,
-    is_maintenance_mode = function (self)
+    is_maintenance_mode = function(self)
       return toBoolean(self.api.is_maintenance_mode())
     end,
-    join_maintenance_thread = function (self)
+    join_maintenance_thread = function(self)
       self.api.join_maintenance_thread()
     end,
 
     --deployment
-    deployer_initialize = function (self, traits)
+    deployer_initialize = function(self, traits)
       self.api.deployer_initialize(traits)
     end,
-    prebuild = function (self)
+    prebuild = function(self)
       return toBoolean(self.api.prebuild())
     end,
-    deploy = function (self)
+    deploy = function(self)
       return toBoolean(self.api.deploy())
     end,
-    deploy_schema = function(self,schema_file)
+    deploy_schema = function(self, schema_file)
       return toBoolean(self.api.deploy_schema(schema_file))
     end,
 
-    deploy_config_file = function(self,file_name,version_key)
-      return toBoolean(self.api.deploy_config_file(file_name,version_key))
+    deploy_config_file = function(self, file_name, version_key)
+      return toBoolean(self.api.deploy_config_file(file_name, version_key))
     end,
     sync_user_data = function(self)
       return toBoolean(self.api.sync_user_data())
@@ -642,10 +639,11 @@ local mtIME = {
 
       if toBoolean(self.api.get_schema_list(schemas)) then
         local ret = {}
-        for i = 0, tonumber(schemas[0].size)-1 do
-          ret[#ret+1] = {
-            id=ffi.string(schemas[0].list[i].schema_id),
-            name=ffi.string(schemas[0].list[i].name)}
+        for i = 0, tonumber(schemas[0].size) - 1 do
+          ret[#ret + 1] = {
+            id = ffi.string(schemas[0].list[i].schema_id),
+            name = ffi.string(schemas[0].list[i].name)
+          }
         end
         return ret
       end
@@ -653,8 +651,8 @@ local mtIME = {
     --session management
     SessionCreate = function(self)
       local id = self.api.create_session()
-      if id~=0 then
-        return setmetatable({id=id, api=self.api},mtSession)
+      if id ~= 0 then
+        return setmetatable({ id = id, api = self.api }, mtSession)
       end
     end,
     SessionCleanup = function(self, all)
@@ -683,76 +681,88 @@ local mtIME = {
       return toString(self.api.get_user_id())
     end,
     UserDataSyncDir = function(self)
-      local buff = ffi.new('char[256]',0)
-      return toString(self.api.get_user_data_sync_dir(buff,ffi.sizeof(buff)-1))
+      local buff = ffi.new('char[256]', 0)
+      return toString(self.api.get_user_data_sync_dir(buff, ffi.sizeof(buff) - 1))
     end,
 
     --config
     ConfigCreate = function(self, init)
-      local config = StructCreate('RimeConfig[1]', gc_config)
+      local config = ffi.new('RimeConfig[1]')
       if init then
         local ret = toBoolean(self.api.config_init(config))
         if not ret then
           return nil
         end
       end
-      host = host or self.api
-      return config
+      return setmetatable({
+        config = config,
+        api = self.api,
+      }, mtRimeConfig)
     end,
 
     ConfigOpen = function(self, config_id)
-      local config = StructCreate('RimeConfig[1]',gc_config)
+      local config = ffi.new('RimeConfig[1]')
       local ret = toBoolean(self.api.config_open(config_id, config))
+
       if ret then
-        host = host or self.api
-        return config
+        return setmetatable({
+          config = config,
+          api = self.api,
+        }, mtRimeConfig)
       end
     end,
 
     SchemaOpen = function(self, schema_id)
-      local config = StructCreate('RimeConfig[1]',gc_config)
+      local config = ffi.new('RimeConfig[1]')
       local ret = toBoolean(self.api.schema_open(schema_id, config))
       if ret then
-        host = host or self.api
-        return config
+        return setmetatable({
+          config = config,
+          api = self.api,
+        }, mtRimeConfig)
       end
     end,
     --
     utils = utils
   },
+
   __call = function(self, sopath)
-    local debug = require'debug'
-    local path = debug.getinfo(1).source --  @e:\work\luaapps\PBOC\lib\HSM\Driver.lua
-    if ffi.os=='Windows' then
-      path = string.sub(path,2,-1)
-      path = string.gsub(path,"\\",'/')
-    elseif ffi.os=='OSX' then
-      path = string.sub(path, 2, -1)
-    end
-
-    --get folder of path
-    local off, e = 1, nil
-    repeat
-      e = string.find(path, '/', off + 1, true)
-      if e then off = e end
-    until e == nil
-    path = path:sub(1, off) or './'
-
-    local f = assert(io.open(path..'rime.h'))
-    local ctx = f:read('*a')
-    f:close()
-    ffi.cdef(ctx)
-
     if not sopath then
-      sopath = ffi.os=='Windows' and 'rime.dll' or 'librime.so'
+      sopath = ffi.os == 'Windows' and 'rime.dll' or 'librime.so'
     end
 
-    self.rime = ffi.load(sopath)
-    self.api = self.rime.rime_get_api()
+    if rime == nil then
+      local debug = require 'debug'
+      local path = debug.getinfo(1).source --  @e:\work\luaapps\PBOC\lib\HSM\Driver.lua
+      if ffi.os == 'Windows' then
+        path = string.sub(path, 2, -1)
+        path = string.gsub(path, "\\", '/')
+      elseif ffi.os == 'OSX' then
+        path = string.sub(path, 2, -1)
+      end
 
-    RimeConfig = RimeConfig or ffi.metatype("RimeConfig", mtRimeConfig)
+      --get folder of path
+      local off, e = 1, nil
+      repeat
+        e = string.find(path, '/', off + 1, true)
+        if e then off = e end
+      until e == nil
+      path = path:sub(1, off) or './'
 
+      local f = assert(io.open(path .. 'rime.h'))
+      local ctx = f:read('*a')
+      f:close()
+      ffi.cdef(ctx)
+      rime = ffi.load(sopath)
+    end
+
+    self.api = rime.rime_get_api()
     return self
+  end,
+
+  __gc = function(self)
+    print("RimeFinalize")
+    rime.RimeFinalize()
   end
 }
 

@@ -1,6 +1,7 @@
 # Compiled Lua sources
 luac.out
 var
+lib
 
 # luarocks build files
 *.src.rock

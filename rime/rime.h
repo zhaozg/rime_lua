@@ -261,7 +261,7 @@ Bool RimeConfigGetBool(RimeConfig *config, const char *key, Bool *value);
 Bool RimeConfigGetInt(RimeConfig *config, const char *key, int *value);
 Bool RimeConfigGetDouble(RimeConfig *config, const char *key, double *value);
 Bool RimeConfigGetString(RimeConfig *config, const char *key,
-                                  char *value, size_t buffer_size);
+                         char *value, size_t buffer_size);
 const char* RimeConfigGetCString(RimeConfig *config, const char *key);
 Bool RimeConfigSetBool(RimeConfig *config, const char *key, Bool value);
 Bool RimeConfigSetInt(RimeConfig *config, const char *key, int value);

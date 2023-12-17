@@ -5,8 +5,7 @@ local ffi = require'ffi'
 
 if (ffi.os == 'OSX') then
   traits = {
-    runtimePath = os.getenv('HOME') ..
-      '/Library/Input Methods/Squirrel.app/Contents/Frameworks/librime.1.dylib',
+    runtimePath = 'lib/librime.1.dylib',
     dataPath = os.getenv('HOME') ..
       '/Library/Input Methods/Squirrel.app/Contents/SharedSupport',
     userPath = 'var/rime',

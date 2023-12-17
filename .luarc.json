@@ -1,0 +1,56 @@
+{
+    "diagnostics": {
+        "enable": true,
+        "globals": [
+            "describe",
+            "pending",
+            "it",
+            "before_each",
+            "after_each",
+            "setup",
+            "teardown",
+            "finally"
+        ],
+        "disable": [
+            "close-non-object"
+        ],
+        "groupFileStatus": {
+            "ambiguity": "Any",
+            "await": "Any",
+            "duplicate": "Any",
+            "global": "Any",
+            "luadoc": "Any",
+            "redefined": "Any",
+            "strict": "Any",
+            "type-check": "Any",
+            "unbalanced": "Any",
+            "unused": "Any"
+        },
+        "ignoreFiles": [
+            "/.luacheckrc"
+        ]
+    },
+    "runtime": {
+        "version": "LuaJIT"
+    },
+    "format.enable": true,
+    "workspace": {
+        "libraryApply": ["busted"],
+        "checkThirdParty": true,
+        "maxPreload": 2000,
+        "preloadFileSize": 1000,
+        "typeFormat": {
+            "config": {
+                "format_line": "false"
+            }
+        },
+        "type": {
+            "castNumberToInteger": false
+        },
+        "doc": {
+            "privateName": [
+                "_*"
+            ]
+        }
+    }
+}
