@@ -2,6 +2,7 @@
 luac.out
 var
 lib
+tmp
 
 # luarocks build files
 *.src.rock

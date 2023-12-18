@@ -7,7 +7,7 @@ if (ffi.os == 'OSX') then
   traits = {
     runtimePath = 'lib/librime.1.dylib',
     dataPath = 'var',
-    userPath = 'var/rime',
+    userPath = 'tmp',
     name= "rime-lua",
     code_name = 'rime-lua',
     version = '0.0.0'
@@ -16,7 +16,7 @@ elseif ffi.os == 'Linux' then
   traits = {
     runtimePath = 'lib/librime.1.so',
     dataPath = 'var',
-    userPath = 'var/rime',
+    userPath = 'tmp',
     name= "rime-lua",
     code_name = 'rime-lua',
     version = '0.0.0'
