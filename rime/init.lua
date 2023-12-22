@@ -581,7 +581,8 @@ local mtIME = {
             toString(message_value))
           print(msg)
         end
-        api.set_notification_handler(on_message, nil);
+        --WARNING: on_message is not thread-safe, Lua not support threads
+        --api.set_notification_handler(on_message, nil);
 
         api.initialize(traits);
         if (self.api.start_maintenance(fullcheck)) then
