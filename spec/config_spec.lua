@@ -28,6 +28,34 @@ describe("config test", function()
     end
   end)
 
+  it("info", function()
+    assert.equal("1.9.0", rime:Version())
+    assert.equal("string", type(rime:SharedDataDir()))
+    assert.equal("string", type(rime:UserDataDir()))
+    assert.equal("string", type(rime:SyncDir()))
+    assert.equal("string", type(rime:UserId()))
+    assert.equal("string", type(rime:UserDataSyncDir()))
+    assert.equal("table",  type(rime:Schemas()))
+  end)
+
+  it("maintance", function()
+    assert(rime:is_maintenance_mode()==false)
+
+    assert(rime:start_maintenance(false)==false)
+    assert(rime:start_maintenance(true)==true)
+    rime:join_maintenance_thread()
+
+    rime:deployer_initialize(traits)
+    rime:prebuild()
+    rime:deploy()
+
+    rime:deploy_schema('luna_pinyin')
+
+    rime:deploy_config_file('default','1.3.1')
+    --rime:sync_user_data()
+  end)
+
+
   it("simple list", function()
     local config = rime:ConfigCreate(true)
     assert(config:create_map('list'))

@@ -28,33 +28,6 @@ describe("basic test", function()
     end
   end)
 
-  it("info", function()
-    assert.equals("1.9.0", rime:Version())
-    assert.equals("string", type(rime:SharedDataDir()))
-    assert.equals("string", type(rime:UserDataDir()))
-    assert.equals("string", type(rime:SyncDir()))
-    assert.equals("string", type(rime:UserId()))
-    assert.equals("string", type(rime:UserDataSyncDir()))
-    assert.equals("table",  type(rime:Schemas()))
-  end)
-
-  it("maintance", function()
-    assert(rime:is_maintenance_mode()==false)
-
-    assert(rime:start_maintenance(false)==false)
-    assert(rime:start_maintenance(true)==true)
-    rime:join_maintenance_thread()
-
-    rime:deployer_initialize(traits)
-    rime:prebuild()
-    rime:deploy()
-
-    rime:deploy_schema('luna_pinyin')
-
-    rime:deploy_config_file('default','1.3.1')
-    --rime:sync_user_data()
-  end)
-
   it("session", function()
     session = rime:SessionCreate()
     rime:SessionCleanup()
@@ -66,7 +39,7 @@ describe("basic test", function()
   it("schema", function()
     session = rime:SessionCreate()
     local _schema = session:Schema()
-    assert.equals('string', type(_schema))
+    assert('string' == type(_schema))
     if _schema ~= 'luna_pinyin' then
       schema = 'luna_pinyin'
       session:Schema(schema)
@@ -87,6 +60,7 @@ describe("basic test", function()
     rime.utils.print_r(schema_list)
 
     local schemaid = schema_list[#schema_list].id
+    assert(schemaid)
     session:Schema(schema)
     assert(schema==session:Schema())
 
@@ -146,7 +120,7 @@ describe("basic test", function()
     assert(session:Select(1))
     print(session:Commit())
 
-    local seq = "yitiaodaheboliangkuanfengchuidaohuaxiangliang'an"
+    local seq = "yitiaodahebolangkuanfengchuidaohuaxiangliang'an"
     for i=1,#seq do
       local keycode = seq:byte(i)
       session:process(keycode)

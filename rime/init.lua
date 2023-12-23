@@ -465,7 +465,7 @@ function utils.printStatus(status)
   print("status: ");
   print('   disabled:', status.disabled)
   print('  composing:', status.composing)
-  print('  asciimode:', status.ascii_mode)
+  print(' ascii_mode:', status.ascii_mode)
   print(' full_shape:', status.full_shape)
   print(' simplified:', status.simplified)
   print("");

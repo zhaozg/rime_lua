@@ -35,8 +35,14 @@
     },
     "format.enable": true,
     "workspace": {
-        "libraryApply": ["busted"],
-        "checkThirdParty": true,
+        "library": [
+          "lua",
+          "$VIMRUNTIME",
+          "${3rd}/busted/library",
+          "${3rd}/luassert/library",
+          "${3rd}/luv/library"
+        ],
+        "checkThirdParty": false,
         "maxPreload": 2000,
         "preloadFileSize": 1000,
         "typeFormat": {
