@@ -45,6 +45,8 @@ describe("double_pinyin test", function()
       ascii_mode = true,
       full_shape = false,
       simplified = true,
+      traditional = false,
+      ascii_punct = false,
       id = schema,
       name = '自然码双拼'
     }, status)

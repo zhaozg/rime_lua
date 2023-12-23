@@ -247,6 +247,8 @@ local mtSession = {
         ret.ascii_mode = toBoolean(status.is_ascii_mode)
         ret.full_shape = toBoolean(status.is_full_shape)
         ret.simplified = toBoolean(status.is_simplified)
+        ret.traditional = toBoolean(status.is_traditional)
+        ret.ascii_punct = toBoolean(status.is_ascii_punct)
 
         return ret
       end

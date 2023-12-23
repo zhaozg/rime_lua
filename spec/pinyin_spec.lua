@@ -44,6 +44,8 @@ describe("luna_pinyin test", function()
       ascii_mode = true,
       full_shape = false,
       simplified = true,
+      traditional = false,
+      ascii_punct = false,
       id = schema,
       name = '朙月拼音'
     })
@@ -66,6 +68,8 @@ describe("luna_pinyin test", function()
       ascii_mode = false,
       full_shape = false,
       simplified = true,
+      traditional = false,
+      ascii_punct = false,
       id = schema,
       name = '朙月拼音'
     })

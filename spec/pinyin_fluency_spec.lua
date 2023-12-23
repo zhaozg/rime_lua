@@ -4,10 +4,6 @@ describe("luna_pinyin test", function()
   local _ref = 0
   local schema = "luna_pinyin_fluency"
   -- 以空格分詞、標點或回車上屏。
-  -- FIXME: session:Commit fail
-  if true then
-    return
-  end
 
   setup(function()
     if not rime then
@@ -49,6 +45,8 @@ describe("luna_pinyin test", function()
       ascii_mode = true,
       full_shape = false,
       simplified = true,
+      traditional = false,
+      ascii_punct = false,
       id = schema,
       name = '朙月拼音·語句流'
     })
@@ -71,6 +69,8 @@ describe("luna_pinyin test", function()
       ascii_mode = false,
       full_shape = false,
       simplified = true,
+      traditional = false,
+      ascii_punct = false,
       id = schema,
       name = '朙月拼音·語句流'
     })
@@ -78,8 +78,8 @@ describe("luna_pinyin test", function()
     list = session:Candidates()
     assert(type(list)=='table')
     assert(#list > 0)
-    --rime.utils.print_r(list,'list of abcd')
-    print(session:Select(1))
+    assert(session:Select(1))
+    assert(session:commit())
     local commit = assert(session:Commit())
     assert.equal("啊不错的", commit)
   end)
@@ -90,37 +90,33 @@ describe("luna_pinyin test", function()
     session:Option('ascii_mode', false)
     local list
 
-    --rime.utils.printInfo(session)
     assert(session:simulate('xiguanjiuhaole')==true)
-    --rime.utils.printInfo(session)
     list = session:Candidates()
     assert(#list > 0)
-    --rime.utils.print_r(list, "习惯就好了")
     assert(session:Select(1))
-
+    assert(session:commit())
     local commit = session:Commit()
     assert.equal("习惯就好了", commit)
 
     assert(session:simulate('burejinsiji')==true)
-    --rime.utils.printInfo(session)
     list = session:Candidates()
     assert(#list > 0)
-    --rime.utils.print_r(list, "布热津斯基")
     assert(session:Select(1))
+    assert(session:commit())
     commit = session:Commit()
     assert.equal("布热津斯基", commit)
 
     assert(session:simulate('shurufangshizhuanhuanjian')==true)
-    --rime.utils.printInfo(session)
     list = session:Candidates()
     assert(session:Select(1))
+    assert(session:commit())
     commit = session:Commit()
     assert.equal("输入方式转换键", commit)
 
     assert(session:simulate('chujiangkongwan')==true)
-    --rime.utils.printInfo(session)
     list = session:Candidates()
     assert(session:Select(1))
+    assert(session:commit())
     commit = session:Commit()
     assert.equal("楚江空晚", commit)
 
@@ -130,13 +126,15 @@ describe("luna_pinyin test", function()
       session:process(keycode)
     end
 
-    local status = session:Status()
     local selected = {2, 2, 4, 2, 2, 1}
-    while(status.composing) do
-      local idx = assert(table.remove(selected, 1))
-      assert(session:Select(idx))
-      status = session:Status()
-    end
+    repeat
+      local idx = table.remove(selected, 1)
+      if idx then
+        --rime.utils.printInfo(session)
+        assert(session:Select(idx))
+      end
+    until not idx
+    assert(session:commit())
 
     assert.equal('一条大河波浪宽风吹稻花香两岸', session:Commit())
   end)
