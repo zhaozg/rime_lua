@@ -558,13 +558,20 @@ end
 -- IME
 -- IME libs
 local rime
-local initialized
+_G.initialized = nil
 
 -- IME metatable
 local mtIME = {
   __index = {
     -- help
     toTraits = toTraits,
+    -- setup
+    setup = function(self, traits)
+      assert(_G.initialized == nil)
+      assert(traits)
+      self.api.setup(traits)
+      _G.initialized = true
+    end,
     -- initialize
     initialize = function(self, traits, fullcheck, on_message)
       assert(self.initlized == nil)
@@ -572,9 +579,11 @@ local mtIME = {
       fullcheck = fullcheck or ffi.C.False
       assert(traits)
 
-      if not initialized then
-        api.setup(traits)
+      if not _G.initialized then
+        self:setup(traits)
+      end
 
+      if not self.initlized then
         on_message = on_message or function(context_object, session_id, message_type, message_value)
           _ = context_object
           local msg = string.format("message: [%d] [%s] %s\n",
@@ -590,7 +599,6 @@ local mtIME = {
         if (self.api.start_maintenance(fullcheck)) then
           api.join_maintenance_thread();
         end
-        initialized = true
       end
       self.initlized = true
       return self.initlized
