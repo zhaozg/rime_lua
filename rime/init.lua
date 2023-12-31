@@ -744,7 +744,7 @@ local mtIME = {
 
     if rime == nil then
       local debug = require 'debug'
-      local path = debug.getinfo(1).source --  @e:\work\luaapps\PBOC\lib\HSM\Driver.lua
+      local path = debug.getinfo(1).source
       if ffi.os == 'Windows' then
         path = string.sub(path, 2, -1)
         path = string.gsub(path, "\\", '/')
