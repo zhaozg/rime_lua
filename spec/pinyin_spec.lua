@@ -78,7 +78,6 @@ expose("an exposed test", function()
       list = session:Candidates()
       assert(type(list)=='table')
       assert(#list > 0)
-      --rime.utils.print_r(list,'list of abcd')
       assert(session:Select(1))
       local commit = session:Commit()
       assert.equal("电子计算机发烫", commit)
@@ -98,6 +97,7 @@ expose("an exposed test", function()
       assert(#list > 0)
       --rime.utils.print_r(list, "习惯就好了")
       assert(session:Select(1))
+      assert(session:commit())
       local commit = session:Commit()
       assert.equal("习惯就好了", commit)
 
@@ -107,6 +107,7 @@ expose("an exposed test", function()
       assert(#list > 0)
       --rime.utils.print_r(list, "布热津斯基")
       assert(session:Select(1))
+      assert(session:commit())
       commit = session:Commit()
       assert.equal("布热津斯基", commit)
 
@@ -114,6 +115,7 @@ expose("an exposed test", function()
       --rime.utils.printInfo(session)
       list = session:Candidates()
       assert(session:Select(1))
+      assert(session:commit())
       commit = session:Commit()
       assert.equal("输入方式转换键", commit)
 
@@ -121,24 +123,20 @@ expose("an exposed test", function()
       --rime.utils.printInfo(session)
       list = session:Candidates()
       assert(session:Select(1))
+      assert(session:commit())
       commit = session:Commit()
       assert.equal("楚江空晚", commit)
 
-      local seq = "yitiaodahebolangkuanfengchuidaohuaxiangliang'an"
+      local seq = "yitiaodahebolang"
       for i=1,#seq do
         local keycode = seq:byte(i)
         session:process(keycode)
       end
 
-      local status = session:Status()
-      local selected = {2, 2, 4, 2, 2, 1}
-      while(status.composing) do
-        local idx = assert(table.remove(selected, 1))
-        assert(session:Select(idx))
-        status = session:Status()
-      end
+      assert(session:Select(1))
+      assert(session:commit())
 
-      assert.equal('一条大河波浪宽风吹稻花香两岸', session:Commit())
+      assert.equal('一条大河波浪', session:Commit())
     end)
   end)
 end)

@@ -18,6 +18,7 @@ jobs:
         os: [macos-latest]
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.12
+      RIMEV: 943b8c6
 
     steps:
     - uses: actions/checkout@v3
@@ -28,9 +29,9 @@ jobs:
       run: |
         brew install luajit
         brew install luarocks
-        wget https://github.com/rime/librime/releases/download/latest/rime-de12d6a-macOS.tar.bz2
+        wget https://github.com/rime/librime/releases/download/latest/rime-$RIMEV-macOS.tar.bz2
         luarocks --lua-dir=/usr/local/opt/luajit install busted
-        tar xjvf rime-de12d6a-macOS.tar.bz2
+        tar xjvf rime-$RIMEV-macOS.tar.bz2
         ln -s dist/lib
         git clone https://github.com/zhaozg/rime_simp.git var
 

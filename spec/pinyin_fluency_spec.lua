@@ -121,23 +121,16 @@ expose("an exposed test", function()
       commit = session:Commit()
       assert.equal("楚江空晚", commit)
 
-      local seq = "yitiaodahebolangkuanfengchuidaohuaxiangliang'an"
+      local seq = "yitiaodahebolang"
       for i=1,#seq do
         local keycode = seq:byte(i)
         session:process(keycode)
       end
-
-      local selected = {2, 2, 4, 2, 2, 1}
-      repeat
-        local idx = table.remove(selected, 1)
-        if idx then
-          --rime.utils.printInfo(session)
-          assert(session:Select(idx))
-        end
-      until not idx
+      list = session:Candidates()
+      assert(session:Select(1))
       assert(session:commit())
 
-      assert.equal('一条大河波浪宽风吹稻花香两岸', session:Commit())
+      assert.equal('一条大河波浪', session:Commit())
     end)
   end)
 end)

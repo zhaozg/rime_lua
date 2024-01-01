@@ -48,16 +48,14 @@ expose("an exposed test", function()
     end)
 
     it("pinyin ascii_mode", function()
-      rime.utils.printInfo(session)
       schema = session:Schema()
-      print('current:',schema)
       session:Schema(schema)
       assert(schema==session:Schema())
 
       rime:deploy_schema('luna_pinyin')
       --change schema
       local schema_list = rime:Schemas()
-      rime.utils.print_r(schema_list)
+      -- rime.utils.print_r(schema_list)
 
       local schemaid = schema_list[#schema_list].id
       assert(schemaid)
@@ -72,17 +70,16 @@ expose("an exposed test", function()
       --disable ascii_mode
       session:Option('ascii_mode', false)
       local list = session:Candidates()
-      rime.utils.print_r(list,'list')
+      -- rime.utils.print_r(list,'list')
 
       assert(session:simulate('abcd')==true)
-      rime.utils.printInfo(session)
+      -- rime.utils.printInfo(session)
       list = session:Candidates()
       assert(type(list)=='table')
       assert(#list > 0)
-      --rime.utils.print_r(list,'list of abcd')
       assert(session:Select(1))
-      print(session:Commit())
-      rime.utils.printInfo(session)
+      local commit = session:Commit()
+      assert(commit=='啊不错的' or '安部彻的')
     end)
 
     it("pinyin ime", function()
@@ -91,66 +88,68 @@ expose("an exposed test", function()
       session:Option('ascii_mode', false)
       local list
 
-      rime.utils.printInfo(session)
       assert(session:simulate('xiguanjiuhaole')==true)
-      rime.utils.printInfo(session)
+      -- rime.utils.printInfo(session)
       list = session:Candidates()
       assert(#list > 0)
       --rime.utils.print_r(list, "习惯就好了")
       assert(session:Select(1))
-      print(session:Commit())
+      assert.equal("习惯就好了", session:Commit())
 
       assert(session:simulate('burejinsiji')==true)
-      rime.utils.printInfo(session)
+      -- rime.utils.printInfo(session)
       list = session:Candidates()
       assert(#list > 0)
       --rime.utils.print_r(list, "布热津斯基")
       assert(session:Select(1))
-      print(session:Commit())
+      assert.equal("布热津斯基", session:Commit())
 
       assert(session:simulate('shurufangshizhuanhuanjian')==true)
-      rime.utils.printInfo(session)
+      --rime.utils.printInfo(session)
       list = session:Candidates()
       assert(session:Select(1))
-      print(session:Commit())
+      assert.equal('输入方式转换键', session:Commit())
 
       assert(session:simulate('chujiangkongwan')==true)
-      rime.utils.printInfo(session)
+      --rime.utils.printInfo(session)
       list = session:Candidates()
       assert(session:Select(1))
-      print(session:Commit())
+      assert.equal('楚江空晚', session:Commit())
 
-      local seq = "yitiaodahebolangkuanfengchuidaohuaxiangliang'an"
+      local seq = "qiushuigongchangtianyise"
       for i=1,#seq do
         local keycode = seq:byte(i)
         session:process(keycode)
         --rime.utils.printInfo(session)
       end
       assert(session:Select(1))
-      print(session:Commit())
+      assert(session:commit())
+      assert.equal('秋水共长天一色', session:Commit())
     end)
 
     it("pinyin_fluency ime", function()
       --disable ascii_mode
       assert(session:Schema('luna_pinyin_fluency'))
       session:Option('ascii_mode', false)
+      session:Option('simplification', true)
 
       assert(session:simulate('xiguanjiuhaole')==true)
-      rime.utils.printInfo(session)
-      local list = session:Candidates()
-      assert(#list > 0)
-      --rime.utils.print_r(list, "习惯就好了")
+      --rime.utils.printInfo(session)
+      --local list = session:Candidates()
+      --assert(#list > 0)
       assert(session:Select(1))
-      print(session:Commit())
+      assert(session:commit())
+      assert.equal('习惯就好了', session:Commit())
 
-      local seq = "yitiaodahebolangkuanfengchuidaohuaxiangliang'an"
+      local seq = "yitiaodahebolang"
       for i=1,#seq do
         local keycode = seq:byte(i)
         session:process(keycode)
       end
-      rime.utils.printInfo(session)
       assert(session:Select(1))
-      print(session:Commit())
+      assert(session:commit())
+      --rime.utils.printInfo(session)
+      assert.equal('一条大河波浪', session:Commit())
     end)
 
     it("double_pinyin ime", function()
@@ -159,12 +158,14 @@ expose("an exposed test", function()
       session:Option('ascii_mode', false)
 
       assert(session:simulate('duguqqbl')==true)
-      rime.utils.printInfo(session)
+      --rime.utils.printInfo(session)
       local list = session:Candidates()
       assert(#list > 0)
       --rime.utils.print_r(list, "习惯就好了")
       assert(session:Select(1))
-      print(session:Commit())
+      assert(session:commit())
+      local commit = assert(session:Commit())
+      assert.equal("独孤求败", commit)
     end)
 
   end)

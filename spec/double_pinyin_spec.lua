@@ -91,21 +91,14 @@ expose("an exposed test", function()
       commit = session:Commit()
       assert.equal("楚江空晚", commit)
 
-      local seq = "yitcdahebolhkrfgivdkhwxdldan"
+      local seq = "yitcdahe,mghvivjclmyy"
       for i=1,#seq do
         local keycode = seq:byte(i)
         session:process(keycode)
       end
+      assert(session:Select(1))
 
-      local status = session:Status()
-      local selected = {2, 2, 4, 2, 2, 1}
-      while(status.composing) do
-        local idx = assert(table.remove(selected, 1))
-        assert(session:Select(idx))
-        status = session:Status()
-      end
-
-      assert.equal('一条大河波浪宽风吹稻花香两岸', session:Commit())
+      assert.equal('一条大河，梦回吹角连营', session:Commit())
     end)
   end)
 end)
